@@ -1,0 +1,88 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: docker.io
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/mean-frontend
+  BACKEND_IMAGE:  ${{ secrets.DOCKERHUB_USERNAME }}/mean-backend
+  FRONTEND_TAG: latest
+  BACKEND_TAG: latest
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Backend image
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ env.BACKEND_TAG }}
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
+      # Frontend image
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ env.FRONTEND_TAG }}
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH to VM and deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_SSH_PORT || 22 }}
+          script: |
+            set -e
+            # Path on VM where repo is cloned initially (see VM bootstrap)
+            APP_DIR="/opt/mean-crud"
+            if [ ! -d "$APP_DIR/.git" ]; then
+              sudo mkdir -p "$APP_DIR"
+              sudo chown -R $USER:$USER "$APP_DIR"
+              git clone ${{ secrets.REPO_SSH_URL }} "$APP_DIR"
+            fi
+            cd "$APP_DIR"
+            git pull
+
+            # Ensure .env exists (optional)
+            if [ ! -f ".env" ]; then
+              echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" > .env
+              echo "BACKEND_TAG=latest" >> .env
+              echo "FRONTEND_TAG=latest" >> .env
+            fi
+
+            # Login to Docker (pull needs auth if rate-limited)
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            docker compose pull
+            docker compose up -d
+            docker system prune -f
+
