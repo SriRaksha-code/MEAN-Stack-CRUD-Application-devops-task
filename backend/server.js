@@ -19,7 +19,7 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     process.exit(1);
   });
 
-const tutorialRoutes = require('./app/routes/tutorial.routes');
+const tutorialRoutes = require('./app/routes/tutorial.routes.js')
 app.use('/api/tutorials', tutorialRoutes);
 
 app.listen(PORT, () => {
