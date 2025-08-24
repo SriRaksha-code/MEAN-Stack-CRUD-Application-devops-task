@@ -12,7 +12,7 @@ COPY . .
 
 # Environment variables
 ENV PORT=3000
-ENV MONGO_URI=mongodb://root:example@mongo:27017/?authSource=admin
+ENV MONGO_URI=mongodb://root:example@mongo:27018/?authSource=admin
 
 EXPOSE 3000
 
