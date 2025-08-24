@@ -1,39 +1,27 @@
-version: "3.9"
-
 services:
   mongo:
     image: mongo:7
     container_name: mongo
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
     ports:
       - "27018:27017"
     volumes:
       - mongo-data:/data/db
-
   backend:
     build: ./backend
-    container_name: mean-backend
-    restart: always
+    container_name: backend
     environment:
       PORT: 3000
-      MONGO_URI: mongodb://root:example@mongo:27018/?authSource=admin
+      MONGO_URI: mongodb://mongo:27017/mean_crud
     depends_on:
       - mongo
-
   frontend:
     build: ./frontend
-    container_name: mean-frontend
-    restart: always
+    container_name: frontend
     depends_on:
       - backend
-
   reverse-proxy:
-    image: nginx:latest
-    container_name: mean-nginx
-    restart: always
+    image: nginx:alpine
+    container_name: reverse-proxy
     ports:
       - "80:80"
     volumes:
