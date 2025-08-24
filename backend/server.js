@@ -10,7 +10,7 @@ app.use(express.json());
 
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27018/mean_crud';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27018/mean_crud';
 
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('✅ Connected to MongoDB'))
