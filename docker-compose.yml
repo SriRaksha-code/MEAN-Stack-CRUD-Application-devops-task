@@ -1,4 +1,4 @@
-
+version: "3.9"
 
 services:
   mongo:
@@ -14,7 +14,7 @@ services:
       - mongo-data:/data/db
 
   backend:
-    image: raksha07/mean-backend:latest
+    build: ./backend
     container_name: mean-backend
     restart: always
     environment:
@@ -24,7 +24,7 @@ services:
       - mongo
 
   frontend:
-    image: raksha07/mean-frontend:latest
+    build: ./frontend
     container_name: mean-frontend
     restart: always
     depends_on:
