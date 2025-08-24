@@ -47,32 +47,11 @@ jobs:
              echo " Connected to EC2 as $(whoami)"
           echo "Working directory: $(pwd)"
           
-          # Check if Docker is installed
-         if ! command -v docker >/dev/null 2>&1; then
-            echo "Docker not found! Installing Docker..."
-            sudo apt update
-            sudo apt install -y docker.io
-            sudo systemctl enable docker
-            sudo systemctl start docker
-          else
-            echo "Docker is installed: $(docker --version)"
-          fi
-          
-          # Check if Docker Compose is installed
-          if ! command -v docker-compose &> /dev/null
-          then
-            echo "Docker Compose not found! Installing Docker Compose..."
-            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-          else
-            echo "Docker Compose is installed: $(docker-compose --version)"
-          fi
 
-          # Navigate to project directory
-          cd /opt/mean-crud || { echo "Directory not found! Exiting."; exit 1; }
+           cd /opt/mean-crud  
 
           # Pull latest images and restart containers
             
-            docker-compose pull
+           docker-compose pull
             docker-compose up -d
 
